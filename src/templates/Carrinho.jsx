@@ -1,4 +1,30 @@
-export default function Carrinho(props) {
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { atualizarCarrinho } from '../acoes';
+import { identificarCliente } from '../acoes';
+
+export default function Carrinho() {
+    const carrinho = useSelector(state => state.carrinho);
+    const dispatch = useDispatch();
+
+    const AlterarQuantidade = (id, quantidade) => {
+        if (quantidade < 1) return;
+
+        const carrinhoAtualizado = carrinho.map(item =>
+            item.id === id ? { ...item, quantidade } : item
+        );
+        localStorage.setItem('carrinho', JSON.stringify(carrinhoAtualizado));
+        dispatch(atualizarCarrinho(carrinhoAtualizado));
+    };
+
+    const ExcluirItem = (id) => {
+        const carrinhoAtualizado = carrinho.filter(item => item.id !== id);
+        localStorage.setItem('carrinho', JSON.stringify(carrinhoAtualizado));
+        dispatch(atualizarCarrinho(carrinhoAtualizado));
+    };
+
+    const qtdCarrinho = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+
     return (
         <div style={{
             display: 'flex',
@@ -18,11 +44,10 @@ export default function Carrinho(props) {
                 padding: '2px',
                 width: '40px'
             }} id='icone-carrinho'>
-                <button id='botao-carrinho'style={{
+                <button id='botao-carrinho' style={{
                     backgroundColor: "inherit",
                     border: '0px',
-                }
-                } type='button'>
+                }} type='button'>
                     <svg xmlns="http://www.w3.org/2000/svg"
                         width="32"
                         height="32"
@@ -33,6 +58,7 @@ export default function Carrinho(props) {
                     </svg>
                 </button>
             </div>
+
             <div id='meu-carrinho' style={{
                 position: 'relative',
                 display: 'flex',
@@ -49,8 +75,9 @@ export default function Carrinho(props) {
                 <p style={{
                     margin: '0px',
                     padding: '0px',
-                }}>{props.qtdCarrinho || 0} item</p>
+                }}>{qtdCarrinho || 0} item{qtdCarrinho !== 1 && 's'}</p>
             </div>
+
             <div id='segurança' style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -82,6 +109,24 @@ export default function Carrinho(props) {
                     borderRadius: '0 0 10px 0'
                 }}>seguro</p>
             </div>
+
+            {carrinho.map(item => (
+                <div key={item.id} style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '5px',
+                    borderBottom: '1px solid #ddd',
+                }}>
+                    <p>{item.title}</p>
+                    <div>
+                        <button onClick={() => AlterarQuantidade(item.id, item.quantidade + 1)}>+</button>
+                        <span>{item.quantidade}</span>
+                        <button onClick={() => AlterarQuantidade(item.id, item.quantidade - 1)}>-</button>
+                    </div>
+                    <button onClick={() => ExcluirItem(item.id)}>Excluir</button>
+                </div>
+            ))}
         </div>
     );
 }
